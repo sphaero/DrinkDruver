@@ -1,0 +1,14 @@
+orange		LEFT chip
+white-orange	LEFT switch
+
+blue 		RIGHT chip
+white-blue 	RIGHT switch
+
+green           BACKWARD chip
+white-green     BACKWARD switch
+
+brown		FORWARD chip meest achterste
+white-brown	FORWARD switch
+
+red		+5V
+black		GND
