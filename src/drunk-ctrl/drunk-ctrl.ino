@@ -72,13 +72,13 @@ int readMq3()
   //Serial.print("mq3_value: ");
   //Serial.print(mq3_value);
   //Serial.print("\r\n");
-  if (mq3_value < 60 )
+  if (mq3_value < 90 )
   {
     //sober
     stateMachine.transitionTo(Sober);
     return 0;
   }
-  if (mq3_value < 61)
+  if (mq3_value < 120)
   {
     //tipsy
     stateMachine.transitionTo(Tipsy);
@@ -207,7 +207,7 @@ void drunkUpdate()
     delta+=0.02;
     Serial.println(delta);
     digitalWrite(GO_FWD, (int)delta);
-    digitalWrite(GO_BWD, HIGH);
+    digitalWrite(GO_BWD, (int)delta);
   }
 
   if (!left) 
@@ -225,43 +225,54 @@ void drunkUpdate()
   }
 }
 
+
+int *controls[] = { &fwd, &bwd, &left, &right};
+
 void hammeredUpdate()
-{
+{  
   // complete mixup of controls
-  int reverse = round(sin(millis()));
-  if (!fwd) // || (!bwd && reverse)) 
+  if (millis() % 5000 < 1) 
   {
-    Serial.println("FWD");
+    Serial.println("shuffled");
+    shuffle(controls); 
+  }
+ 
+  if (!*controls[0]) {
+
+    digitalWrite(GO_FWD, LOW);
+  }
+  else if (!*controls[1]) 
+  {
     digitalWrite(GO_BWD, LOW);
   }
   else
   {
+    digitalWrite(GO_FWD, HIGH);
     digitalWrite(GO_BWD, HIGH);
   }
 
-  if (!bwd)// || (!fwd && reverse)) 
-  {
-    Serial.println("BWD");
-    digitalWrite(GO_FWD, LOW);
+  if (!*controls[2]) {
+    digitalWrite(GO_LEFT, LOW);
   }
-  else
-  {
-    digitalWrite(GO_FWD, HIGH);
-  }
-
-  if (!left) {
+  else if (!*controls[3]) {
     digitalWrite(GO_RIGHT, LOW);
   }
   else
   {
+    digitalWrite(GO_LEFT, HIGH);
     digitalWrite(GO_RIGHT, HIGH);
   }
+}
 
-  if (!right) {
-    digitalWrite(GO_LEFT, LOW);
-  }
-  else
+void shuffle(int* array[])
+{
+  int n = 4;
+  
+  for (int i = 0; i< n - 1; i++)
   {
-    digitalWrite(GO_LEFT, HIGH);
+    int j = random(0,39)/10;//i + rand() / (RAND_MAX / (n - i) + 1);
+    int* t = array[j];
+    array[j] = array[i];
+    array[i] = t;
   }
 }
