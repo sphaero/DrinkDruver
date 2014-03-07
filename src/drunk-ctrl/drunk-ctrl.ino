@@ -15,7 +15,22 @@ State Drunk = State(drunkUpdate);
 State Hammered = State(hammeredUpdate);
 
 // the state machine controls which of the states get attention and execution time
-FSM stateMachine = FSM(Sober); //initialize state machine, start in state: Sober
+FSM stateMachine = FSM(Hammered); //initialize state machine, start in state: Sober
+
+/* 
+  It takes about 20-30 minutes before the values become more
+  stable. Once the value is a bit more stable (for example around
+  100), the value for the "sober state" should be around 120.
+  Most of the time whatever the value is, breathing onto the
+  sensor increases it by 20.
+  
+  Around 50-60, it becomes very stable.
+  
+  The value increase by 100-200 with a bit of alcohol if you
+  breathe on the sensor right after drinking. If you do it again
+  after 5 minutes or so, the value starts increasing much less.
+*/
+int mq3_analogPin = A5; // connected to the output pin of MQ3
 
 // Controller buttons
 #define BTN_RIGHT 2
@@ -36,10 +51,10 @@ void setup()
   pinMode(GO_BWD, OUTPUT);
   pinMode(GO_LEFT, OUTPUT);
   pinMode(GO_RIGHT, OUTPUT);
-  digitalWrite(GO_FWD, LOW);
-  digitalWrite(GO_BWD, LOW);
-  digitalWrite(GO_LEFT, LOW);
-  digitalWrite(GO_RIGHT, LOW);
+  digitalWrite(GO_FWD, HIGH);
+  digitalWrite(GO_BWD, HIGH);
+  digitalWrite(GO_LEFT, HIGH);
+  digitalWrite(GO_RIGHT, HIGH);
 
   pinMode(BTN_FWD, INPUT_PULLUP);
   pinMode(BTN_BWD, INPUT_PULLUP);
@@ -48,6 +63,38 @@ void setup()
 }
 
 int fwd, bwd, left, right;
+
+int readMq3()
+{
+  int mq3_value = analogRead(mq3_analogPin);
+  //Serial.print("mq3_value: ");
+  //Serial.print(mq3_value);
+  //Serial.print("\r\n");
+  if (mq3_value < 60 )
+  {
+    //sober
+    stateMachine.transitionTo(Sober);
+    return 0;
+  }
+  if (mq3_value < 120)
+  {
+    //tipsy
+    stateMachine.transitionTo(Tipsy);
+    return 1;
+  }
+  if (mq3_value < 150)
+  {
+    //drunk
+    stateMachine.transitionTo(Drunk);
+    return 2;
+  }
+  else 
+  {
+    //hammered
+    stateMachine.transitionTo(Hammered);
+    return 3;
+  }  
+}
 
 void readButtons()
 {
@@ -61,6 +108,7 @@ void readButtons()
 void loop()
 {
   readButtons();
+  readMq3();
   stateMachine.update();
 }
 
@@ -68,43 +116,76 @@ void soberUpdate()
 {
   if (!fwd) {
     Serial.println("FWD");
-    digitalWrite(GO_FWD, HIGH);
+    digitalWrite(GO_FWD, LOW);
   }
   else
   {
-    digitalWrite(GO_FWD, LOW);
+    digitalWrite(GO_FWD, HIGH);
   }
 
   if (!bwd) {
     Serial.println("BWD");
-    digitalWrite(GO_BWD, HIGH);
+    digitalWrite(GO_BWD, LOW);
   }
   else
   {
-    digitalWrite(GO_BWD, LOW);
+    digitalWrite(GO_BWD, HIGH);
   }
 
   if (!left) {
-    Serial.println("LEFT");
-    digitalWrite(GO_LEFT, HIGH);
+    //Serial.println("LEFT");
+    digitalWrite(GO_LEFT, LOW);
   }
   else
   {
-    digitalWrite(GO_LEFT, LOW);
+    digitalWrite(GO_LEFT, HIGH);
   }
 
   if (!right) {
     Serial.println("RIGHT");
-    digitalWrite(GO_RIGHT, HIGH);
+    digitalWrite(GO_RIGHT, LOW);
   }
   else
   {
-    digitalWrite(GO_RIGHT, LOW);
+    digitalWrite(GO_RIGHT, HIGH);
   }
 }
 
 void tipsyUpdate()
-{}
+{
+  float lr = sin(millis()/100);
+  if (!fwd) {
+    digitalWrite(GO_FWD, LOW);
+    Serial.println(lr);
+    // some times go left or right
+    if (lr > 0.7 && left) left = LOW;
+    else if (lr < -0.7 && right) right = LOW;
+  }
+  else if (!bwd)
+  {
+    digitalWrite(GO_BWD, LOW);
+  }
+  else
+  {
+    digitalWrite(GO_FWD, HIGH);
+    digitalWrite(GO_BWD, HIGH);
+  }
+
+
+  if (!left) 
+  {
+    digitalWrite(GO_LEFT, LOW);
+  }
+  else if (!right) 
+  {
+    digitalWrite(GO_RIGHT, LOW);
+  }
+  else
+  {
+    digitalWrite(GO_LEFT, HIGH);
+    digitalWrite(GO_RIGHT, HIGH);
+  }
+}
 
 void drunkUpdate()
 {}
@@ -112,37 +193,39 @@ void drunkUpdate()
 void hammeredUpdate()
 {
   int reverse = round(sin(millis()));
-  if (!fwd || (!bwd && reverse)) {
+  if (!fwd) // || (!bwd && reverse)) 
+  {
     Serial.println("FWD");
-    digitalWrite(GO_FWD, HIGH);
+    digitalWrite(GO_BWD, LOW);
   }
   else
   {
-    digitalWrite(GO_FWD, LOW);
-  }
-
-  if (!bwd || (!fwd && reverse)) {
-    Serial.println("BWD");
     digitalWrite(GO_BWD, HIGH);
   }
+
+  if (!bwd)// || (!fwd && reverse)) 
+  {
+    Serial.println("BWD");
+    digitalWrite(GO_FWD, LOW);
+  }
   else
   {
-    digitalWrite(GO_BWD, LOW);
+    digitalWrite(GO_FWD, HIGH);
   }
 
   if (!left) {
-    digitalWrite(GO_LEFT, HIGH);
+    digitalWrite(GO_RIGHT, LOW);
   }
   else
   {
-    digitalWrite(GO_LEFT, LOW);
+    digitalWrite(GO_RIGHT, HIGH);
   }
 
   if (!right) {
-    digitalWrite(GO_RIGHT, HIGH);
+    digitalWrite(GO_LEFT, LOW);
   }
   else
   {
-    digitalWrite(GO_RIGHT, LOW);
+    digitalWrite(GO_LEFT, HIGH);
   }
 }
