@@ -47,6 +47,8 @@ int mq3_analogPin = A5; // connected to the output pin of MQ3
 void setup()
 {
   Serial.begin(9600);
+  //random entropy
+  randomSeed(analogRead(0));
   pinMode(GO_FWD, OUTPUT);
   pinMode(GO_BWD, OUTPUT);
   pinMode(GO_LEFT, OUTPUT);
@@ -76,7 +78,7 @@ int readMq3()
     stateMachine.transitionTo(Sober);
     return 0;
   }
-  if (mq3_value < 120)
+  if (mq3_value < 61)
   {
     //tipsy
     stateMachine.transitionTo(Tipsy);
@@ -175,11 +177,57 @@ void tipsyUpdate()
   }
 }
 
+float delta = 1.0;
 void drunkUpdate()
-{}
+{
+  // extreme unstable control
+  float slowsin = sin(millis()/270);
+  float fastsin = sin(millis()/13);
+  if (!fwd) {
+    //sometimes we forget to let go of the pedal :)
+    int rnd = random(0,100)/90.0;
+    Serial.println(rnd);
+    if (rnd)
+    {
+      delta = 0.0;
+    }
+    digitalWrite(GO_FWD, LOW);
+    // some times go left or right
+    if (slowsin > 0.5 && left) left = LOW;
+    else if (slowsin < -0.5 && right) right = LOW;
+  }
+  else if (!bwd)
+  {
+    digitalWrite(GO_BWD, LOW);
+    if (fastsin > 0.5 && left) left = LOW;
+    else if (fastsin < -0.5 && right) right = LOW;    
+  }
+  else
+  {
+    delta+=0.02;
+    Serial.println(delta);
+    digitalWrite(GO_FWD, (int)delta);
+    digitalWrite(GO_BWD, HIGH);
+  }
+
+  if (!left) 
+  {
+    digitalWrite(GO_LEFT, LOW);
+  }
+  else if (!right) 
+  {
+    digitalWrite(GO_RIGHT, LOW);
+  }
+  else
+  {
+    digitalWrite(GO_LEFT, HIGH);
+    digitalWrite(GO_RIGHT, HIGH);
+  }
+}
 
 void hammeredUpdate()
 {
+  // complete mixup of controls
   int reverse = round(sin(millis()));
   if (!fwd) // || (!bwd && reverse)) 
   {
