@@ -115,38 +115,27 @@ void loop()
 void soberUpdate() 
 {
   if (!fwd) {
-    Serial.println("FWD");
     digitalWrite(GO_FWD, LOW);
   }
-  else
+  else if (!bwd) 
   {
-    digitalWrite(GO_FWD, HIGH);
-  }
-
-  if (!bwd) {
-    Serial.println("BWD");
     digitalWrite(GO_BWD, LOW);
   }
   else
   {
+    digitalWrite(GO_FWD, HIGH);
     digitalWrite(GO_BWD, HIGH);
   }
 
   if (!left) {
-    //Serial.println("LEFT");
     digitalWrite(GO_LEFT, LOW);
   }
-  else
-  {
-    digitalWrite(GO_LEFT, HIGH);
-  }
-
-  if (!right) {
-    Serial.println("RIGHT");
+  else if (!right) {
     digitalWrite(GO_RIGHT, LOW);
   }
   else
   {
+    digitalWrite(GO_LEFT, HIGH);
     digitalWrite(GO_RIGHT, HIGH);
   }
 }
@@ -156,7 +145,6 @@ void tipsyUpdate()
   float lr = sin(millis()/100);
   if (!fwd) {
     digitalWrite(GO_FWD, LOW);
-    Serial.println(lr);
     // some times go left or right
     if (lr > 0.7 && left) left = LOW;
     else if (lr < -0.7 && right) right = LOW;
