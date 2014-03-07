@@ -15,7 +15,7 @@ State Drunk = State(drunkUpdate);
 State Hammered = State(hammeredUpdate);
 
 // the state machine controls which of the states get attention and execution time
-FSM stateMachine = FSM(Hammered); //initialize state machine, start in state: Sober
+FSM stateMachine = FSM(Sober); //initialize state machine, start in state: Sober
 
 /* 
   It takes about 20-30 minutes before the values become more
@@ -37,6 +37,8 @@ int mq3_analogPin = A5; // connected to the output pin of MQ3
 #define BTN_FWD 4
 #define BTN_BWD 6
 #define BTN_LEFT 8
+
+#define BTN_TEST 11
 
 // Controller pins
 #define GO_RIGHT 3
@@ -62,9 +64,10 @@ void setup()
   pinMode(BTN_BWD, INPUT_PULLUP);
   pinMode(BTN_LEFT, INPUT_PULLUP);
   pinMode(BTN_RIGHT, INPUT_PULLUP);
+  pinMode(BTN_TEST, INPUT_PULLUP);
 }
 
-int fwd, bwd, left, right;
+int fwd, bwd, left, right, test;
 
 int readMq3()
 {
@@ -103,14 +106,19 @@ void readButtons()
   fwd   = digitalRead(BTN_FWD); 
   bwd   = digitalRead(BTN_BWD); 
   left  = digitalRead(BTN_LEFT); 
-  right = digitalRead(BTN_RIGHT); 
+  right = digitalRead(BTN_RIGHT);
+  test  = digitalRead(BTN_TEST);
 }
 
 
 void loop()
 {
   readButtons();
-  readMq3();
+  if (!test)
+  {
+    Serial.println("testing sensor");
+    readMq3();
+  }
   stateMachine.update();
 }
 
