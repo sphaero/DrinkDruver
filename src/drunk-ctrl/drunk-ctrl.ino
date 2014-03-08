@@ -72,22 +72,22 @@ int fwd, bwd, left, right, test;
 int readMq3()
 {
   int mq3_value = analogRead(mq3_analogPin);
-  //Serial.print("mq3_value: ");
-  //Serial.print(mq3_value);
-  //Serial.print("\r\n");
-  if (mq3_value < 90 )
+  Serial.print("mq3_value: ");
+  Serial.print(mq3_value);
+  Serial.print("\r\n");
+  if (mq3_value < 460 )
   {
     //sober
     stateMachine.transitionTo(Sober);
     return 0;
   }
-  if (mq3_value < 120)
+  if (mq3_value < 700)
   {
     //tipsy
     stateMachine.transitionTo(Tipsy);
     return 1;
   }
-  if (mq3_value < 150)
+  if (mq3_value < 750)
   {
     //drunk
     stateMachine.transitionTo(Drunk);
@@ -116,7 +116,6 @@ void loop()
   readButtons();
   if (!test)
   {
-    Serial.println("testing sensor");
     readMq3();
   }
   stateMachine.update();
