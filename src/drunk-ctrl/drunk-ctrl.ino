@@ -38,7 +38,7 @@ int mq3_analogPin = A5; // connected to the output pin of MQ3
 #define BTN_BWD 6
 #define BTN_LEFT 8
 
-#define BTN_TEST 11
+#define BTN_TEST 12
 
 // Controller pins
 #define GO_RIGHT 3
@@ -69,25 +69,27 @@ void setup()
 
 int fwd, bwd, left, right, test;
 
+int mq3_base = 120;
+
 int readMq3()
 {
   int mq3_value = analogRead(mq3_analogPin);
   Serial.print("mq3_value: ");
   Serial.print(mq3_value);
   Serial.print("\r\n");
-  if (mq3_value < 460 )
+  if (mq3_value < mq3_base )
   {
     //sober
     stateMachine.transitionTo(Sober);
     return 0;
   }
-  if (mq3_value < 700)
+  if (mq3_value < mq3_base+100)
   {
     //tipsy
     stateMachine.transitionTo(Tipsy);
     return 1;
   }
-  if (mq3_value < 750)
+  if (mq3_value < mq3_base+500)
   {
     //drunk
     stateMachine.transitionTo(Drunk);
@@ -192,10 +194,11 @@ void drunkUpdate()
   float fastsin = sin(millis()/13);
   if (!fwd) {
     //sometimes we forget to let go of the pedal :)
-    int rnd = random(0,100)/90.0;
-    Serial.println(rnd);
+    int rnd = random(0,100)/98.0;
     if (rnd)
     {
+      Serial.print("delta enabled");
+      Serial.print("\n\r");
       delta = 0.0;
     }
     digitalWrite(GO_FWD, LOW);
@@ -212,7 +215,7 @@ void drunkUpdate()
   else
   {
     delta+=0.02;
-    Serial.println(delta);
+    //Serial.println(delta);
     digitalWrite(GO_FWD, (int)delta);
     digitalWrite(GO_BWD, (int)delta);
   }
